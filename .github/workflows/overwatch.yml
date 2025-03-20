@@ -1,0 +1,27 @@
+
+name: Overwatch
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  overwatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - name: Install uv
+        run: |
+          pip install uv
+          uv sync --frozen
+      - name: Install overwatch-cli
+        run: |
+          curl -o overwatch-cli https://overwatch.codecov.dev/linux/cli
+          chmod +x overwatch-cli
+      - name: Run overwatch
+        run: ./overwatch-cli python --python-path .venv/bin/python
