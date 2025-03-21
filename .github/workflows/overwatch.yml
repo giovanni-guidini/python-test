@@ -24,4 +24,9 @@ jobs:
           curl -o overwatch-cli https://overwatch.codecov.dev/linux/cli
           chmod +x overwatch-cli
       - name: Run overwatch
-        run: ./overwatch-cli python --python-path .venv/bin/python
+        run: |
+          ./overwatch-cli \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} \
+            --organization-slug codecov \
+            python \
+            --python-path .venv/bin/python
