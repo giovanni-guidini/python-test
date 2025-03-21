@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 
 import click
+import sentry_sdk
 from module.todos import Todo, TodoList, TodoFilter
 from module.utils import parse_date
 
 
 @click.group()
 def cli():
+    sentry_sdk.init(
+        dsn="https://820bf9f2ce0bfac357be653ff1b567b8@o26192.ingest.us.sentry.io/4509010750210048",
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+    )
     """Todo List CLI"""
 
 
@@ -24,7 +31,7 @@ def add(title: str, description: str, deadline: str | None):
         title=title,
         description=description,
         completed=False,
-        deadline=deadline_date,
+        deadline=deadline,
         completed_at=None,
     )
     LIST.add(todo)
@@ -36,8 +43,13 @@ def add(title: str, description: str, deadline: str | None):
 @click.option("--deadline", help="Filter by max deadline (YYYY-MM-DD)")
 def list(completed: bool, deadline: str | None):
     """List todos"""
-    filter = TodoFilter(completed=completed, max_deadline=parse_date(deadline))
+    filter = TodoFilter(completed=completed)
     todos = LIST.get_todos(filter)
+
+    total_completed = sum(1 for todo in todos if todo.completed)
+
+    click.echo(f"TODO [{total_completed}/{len(todos)}]")
+    click.echo("-" * 50)
 
     for todo in todos:
         status = "✓" if todo.completed else " "
@@ -47,6 +59,8 @@ def list(completed: bool, deadline: str | None):
         click.echo(f"[{status}] {todo.id}. {todo.title} (Due: {deadline_str})")
         if todo.description:
             click.echo(f"   {todo.description}")
+
+    click.echo(f"(completed: {total_completed / len(todos) * 100}%)")
 
 
 @cli.command()
